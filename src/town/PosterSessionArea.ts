@@ -10,16 +10,25 @@ import InteractableArea from './InteractableArea';
 export default class PosterSessionArea extends InteractableArea {
   // add fields
   public get stars() {
-    throw new Error('Not implemented');
+    return this._stars;
   }
 
   public get title() {
-    throw new Error('Not implemented');
+    return this._title;
   }
 
   public get imageContents() {
-    throw new Error('Not implemented');
+    return this._imageContents;
   }
+
+  /** The number of stars that other players have given this poster. * */
+  private _stars = 0;
+
+  /** The contents of the poster file to be viewed. * */
+  private _imageContents: string | undefined = undefined;
+
+  /** The title of the poster. * */
+  private _title: string | undefined = undefined;
 
   /**
    * Creates a new PosterSessionArea
@@ -34,7 +43,9 @@ export default class PosterSessionArea extends InteractableArea {
     townEmitter: TownEmitter,
   ) {
     super(id, coordinates, townEmitter);
-    // fill in
+    this._stars = stars;
+    this._imageContents = imageContents;
+    this._title = title;
   }
 
   /**
@@ -45,7 +56,13 @@ export default class PosterSessionArea extends InteractableArea {
    * @param player
    */
   public remove(player: Player): void {
-    throw new Error('Not implemented');
+    super.remove(player);
+    if (!this.isActive) {
+      this._imageContents = undefined;
+      this._title = undefined;
+      this._stars = 0;
+      this._emitAreaChanged();
+    }
   }
 
   /**
@@ -54,7 +71,9 @@ export default class PosterSessionArea extends InteractableArea {
    * @param posterSessionArea updated model
    */
   public updateModel(updatedModel: PosterSessionAreaModel) {
-    throw new Error('Not implemented');
+    this._imageContents = updatedModel.imageContents;
+    this._title = updatedModel.title;
+    this._stars = updatedModel.stars;
   }
 
   /**
@@ -62,19 +81,33 @@ export default class PosterSessionArea extends InteractableArea {
    * transporting over a socket to a client (i.e., serializable).
    */
   public toModel(): PosterSessionAreaModel {
-    throw new Error('Not implemented');
+    return {
+      id: this.id,
+      stars: this._stars,
+      imageContents: this._imageContents,
+      title: this._title,
+    };
   }
 
   /**
    * Creates a new PosterSessionArea object that will represent a PosterSessionArea object in the town map.
    * @param mapObject An ITiledMapObject that represents a rectangle in which this viewing area exists
    * @param townEmitter An emitter that can be used by this viewing area to broadcast updates to players in the town
-   * @returns
+   * @returns PosterSession area object to go in town map
    */
   public static fromMapObject(
     mapObject: ITiledMapObject,
     townEmitter: TownEmitter,
   ): PosterSessionArea {
-    throw new Error('Not implemented');
+    const { name, width, height } = mapObject;
+    if (!width || !height) {
+      throw new Error(`Malformed poster session area ${name}`);
+    }
+    const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
+    return new PosterSessionArea(
+      { id: name, stars: 0, imageContents: undefined, title: undefined },
+      rect,
+      townEmitter,
+    );
   }
 }

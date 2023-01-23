@@ -9,6 +9,9 @@ import PosterSessionArea from './PosterSessionArea';
 describe('PosterSessionArea', () => {
   const box = { x: 100, y: 100, width: 100, height: 100 };
   let area: PosterSessionArea;
+  let areaNoTitle: PosterSessionArea;
+  let areaNoImage: PosterSessionArea;
+  let areaNoTitleNoImage: PosterSessionArea;
   const emitter = mock<TownEmitter>();
   let player: Player;
   const id = nanoid();
@@ -19,6 +22,21 @@ describe('PosterSessionArea', () => {
   beforeEach(() => {
     mockClear(emitter);
     area = new PosterSessionArea({ id, stars, title, imageContents }, box, emitter);
+    areaNoTitle = new PosterSessionArea(
+      { id, stars, title: undefined, imageContents },
+      box,
+      emitter,
+    );
+    areaNoImage = new PosterSessionArea(
+      { id, stars, title, imageContents: undefined },
+      box,
+      emitter,
+    );
+    areaNoTitleNoImage = new PosterSessionArea(
+      { id, stars, title: undefined, imageContents: undefined },
+      box,
+      emitter,
+    );
     player = new Player(nanoid(), mock<TownEmitter>());
     area.add(player);
   });
@@ -33,6 +51,25 @@ describe('PosterSessionArea', () => {
       expect(area.occupantsByID).toEqual([extraPlayer.id]);
       const lastEmittedUpdate = getLastEmittedEvent(emitter, 'interactableUpdate');
       expect(lastEmittedUpdate).toEqual({ id, stars, title, imageContents });
+    });
+    it('Does nothing if the given player is already removed from the poster session', () => {
+      const extraPlayer = new Player(nanoid(), mock<TownEmitter>());
+      area.add(extraPlayer);
+      area.remove(player);
+      expect(area.occupantsByID).toEqual([extraPlayer.id]);
+      const lastEmittedUpdate1 = getLastEmittedEvent(emitter, 'interactableUpdate');
+      expect(lastEmittedUpdate1).toEqual({ id, stars, title, imageContents });
+      area.remove(player);
+      expect(area.occupantsByID).toEqual([extraPlayer.id]);
+      const lastEmittedUpdate2 = getLastEmittedEvent(emitter, 'interactableUpdate');
+      expect(lastEmittedUpdate2).toEqual({ id, stars, title, imageContents });
+    });
+    it('Does nothing if the given player was never in the poster session', () => {
+      const extraPlayer = new Player(nanoid(), mock<TownEmitter>());
+      area.remove(extraPlayer);
+      expect(area.occupantsByID).toEqual([player.id]);
+      const lastEmittedUpdate1 = getLastEmittedEvent(emitter, 'interactableUpdate');
+      expect(lastEmittedUpdate1).toEqual({ id, stars, title, imageContents });
     });
     it("Clears the player's interactableID and emits an update for their location", () => {
       area.remove(player);
@@ -71,6 +108,61 @@ describe('PosterSessionArea', () => {
       stars,
       title,
       imageContents,
+    });
+  });
+  test('toModel with title and imageContents excluded', () => {
+    const model = areaNoTitleNoImage.toModel();
+    expect(model).toEqual({
+      id,
+      stars,
+    });
+  });
+  test('toModel with title excluded', () => {
+    const model = areaNoTitle.toModel();
+    expect(model).toEqual({
+      id,
+      stars,
+      imageContents,
+    });
+  });
+  test('toModel with imageContents excluded', () => {
+    const model = areaNoImage.toModel();
+    expect(model).toEqual({
+      id,
+      stars,
+      title,
+    });
+  });
+  describe('updateModel given an undefined value', () => {
+    const newId = 'spam';
+    const newStars = 2;
+    let newTitle: string | undefined = 'New Test Poster Title';
+    let newImageContents: string | undefined = 'random string not image';
+    it('for title will update the title to be undefined', () => {
+      newTitle = undefined;
+      area.updateModel({
+        id: newId,
+        stars: newStars,
+        title: newTitle,
+        imageContents: newImageContents,
+      });
+      expect(area.stars).toBe(newStars);
+      expect(area.id).toBe(id);
+      expect(area.title).toBeUndefined();
+      expect(area.imageContents).toBe(newImageContents);
+    });
+    it('for imageContents will update the imageContents to be undefined', () => {
+      newImageContents = undefined;
+      area.updateModel({
+        id: newId,
+        stars: newStars,
+        title: newTitle,
+        imageContents: newImageContents,
+      });
+      expect(area.stars).toBe(newStars);
+      expect(area.id).toBe(id);
+      expect(area.title).toBe(newTitle);
+      expect(area.imageContents).toBeUndefined();
     });
   });
   test('updateModel sets stars, title, and imageContents', () => {

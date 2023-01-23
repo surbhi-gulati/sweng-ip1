@@ -25,7 +25,6 @@ import {
   PosterSessionArea as PosterSessionAreaModel,
 } from '../types/CoveyTownSocket';
 import PosterSessionArea from './PosterSessionArea';
-import { isPosterSessionArea } from '../TestUtils';
 
 /**
  * This is the town route
@@ -182,7 +181,14 @@ export class TownsController extends Controller {
     @Header('X-Session-Token') sessionToken: string,
     @Body() requestBody: PosterSessionAreaModel,
   ): Promise<void> {
-    throw new Error('Not implemented');
+    const town = this._townsStore.getTownByID(townID);
+    if (!town?.getPlayerBySessionToken(sessionToken)) {
+      throw new InvalidParametersError('Invalid values specified');
+    }
+    const success = town.addPosterSessionArea(requestBody);
+    if (!success) {
+      throw new InvalidParametersError('Invalid values specified');
+    }
   }
 
   /**
@@ -203,7 +209,17 @@ export class TownsController extends Controller {
     @Path() posterSessionId: string,
     @Header('X-Session-Token') sessionToken: string,
   ): Promise<string | undefined> {
-    throw new Error('Not implemented');
+    const town = this._townsStore.getTownByID(townID);
+    if (!town?.getPlayerBySessionToken(sessionToken)) {
+      throw new InvalidParametersError('Invalid values specified');
+    }
+    const posterAreaSession = town
+      .getInteractable(posterSessionId)
+      .toModel() as PosterSessionAreaModel;
+    if (!posterAreaSession) {
+      throw new InvalidParametersError('Invalid values specified');
+    }
+    return posterAreaSession.imageContents;
   }
 
   /**
@@ -226,7 +242,18 @@ export class TownsController extends Controller {
     @Path() posterSessionId: string,
     @Header('X-Session-Token') sessionToken: string,
   ): Promise<number> {
-    throw new Error('Not implemented');
+    const town = this._townsStore.getTownByID(townID);
+    if (!town?.getPlayerBySessionToken(sessionToken)) {
+      throw new InvalidParametersError('Invalid values specified');
+    }
+    const posterAreaSession = town.getInteractable(posterSessionId) as PosterSessionArea;
+    const posterAreaSessionModel = posterAreaSession.toModel() as PosterSessionAreaModel;
+    posterAreaSessionModel.stars += 1;
+    if (!posterAreaSession) {
+      throw new InvalidParametersError('Invalid values specified');
+    }
+    posterAreaSession.updateModel(posterAreaSessionModel);
+    return posterAreaSessionModel.stars;
   }
 
   /**

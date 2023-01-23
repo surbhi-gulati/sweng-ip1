@@ -4,7 +4,6 @@ import { BroadcastOperator } from 'socket.io';
 import IVideoClient from '../lib/IVideoClient';
 import Player from '../lib/Player';
 import TwilioVideo from '../lib/TwilioVideo';
-import { isPosterSessionArea, isViewingArea } from '../TestUtils';
 import {
   ChatMessage,
   ConversationArea as ConversationAreaModel,
@@ -133,7 +132,12 @@ export default class Town {
     // Set up a listener to forward all chat messages to all clients in the same interactableArea as the player,
     // and only if the message has the same interactable id as the player
     socket.on('chatMessage', (message: ChatMessage) => {
-      // fill in
+      const interactableArea = this._interactables.find(
+        interactable => interactable.id === message.interactableId,
+      );
+      if (interactableArea) {
+        socket.to(interactableArea.id).emit('chatMessage', message);
+      }
     });
 
     // Register an event listener for the client socket: if the client updates their
@@ -145,12 +149,28 @@ export default class Town {
     // Set up a listener to process updates to interactables.
     // Currently only knows how to process updates for ViewingAreas and PosterSessionAreas, and
     // ignores any other updates for any other kind of interactable.
-    // For ViewingAreas and PosterSessionAreas: Uses the 'newPlayer' object's 'towmEmitter' to forward
+    // For ViewingAreas and PosterSessionAreas: Uses the 'newPlayer' object's 'townEmitter' to forward
     // the interactableUpdate to the other players in the town. Also dispatches an
     // updateModel call to the viewingArea or posterSessionArea that corresponds to the interactable being
     // updated. Does not throw an error if the specified viewing area or poster session area does not exist.
     socket.on('interactableUpdate', (update: Interactable) => {
-      // fill in
+      if (update instanceof PosterSessionArea) {
+        const posterSessionArea = this._interactables.find(
+          interactable => interactable.id === update.id,
+        ) as PosterSessionArea;
+        if (posterSessionArea) {
+          newPlayer.townEmitter.emit('interactableUpdate', update);
+          posterSessionArea.updateModel(update as PosterSessionAreaModel);
+        }
+      } else if (update instanceof ViewingArea) {
+        const viewingArea = this._interactables.find(
+          interactable => interactable.id === update.id,
+        ) as ViewingArea;
+        if (viewingArea) {
+          newPlayer.townEmitter.emit('interactableUpdate', update);
+          viewingArea.updateModel(update as ViewingAreaModel);
+        }
+      }
     });
     return newPlayer;
   }
@@ -297,7 +317,22 @@ export default class Town {
    * with the specified ID or if there is no poster image and title specified
    */
   public addPosterSessionArea(posterSessionArea: PosterSessionAreaModel): boolean {
-    throw new Error('Not implemented');
+    const area = this._interactables.find(
+      eachArea => eachArea.id === posterSessionArea.id,
+    ) as PosterSessionArea;
+    if (
+      !area ||
+      !posterSessionArea.title ||
+      area.title ||
+      !posterSessionArea.imageContents ||
+      area.imageContents
+    ) {
+      return false;
+    }
+    area.updateModel(posterSessionArea);
+    area.addPlayersWithinBounds(this._players);
+    this._broadcastEmitter.emit('interactableUpdate', area.toModel());
+    return true;
   }
 
   /**
