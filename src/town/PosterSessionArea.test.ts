@@ -43,11 +43,9 @@ describe('PosterSessionArea', () => {
 
   describe('remove', () => {
     it('Removes the player from the list of occupants and emits an interactableUpdate event', () => {
-      // Add another player so that we are not also testing what happens when the last player leaves
       const extraPlayer = new Player(nanoid(), mock<TownEmitter>());
       area.add(extraPlayer);
       area.remove(player);
-
       expect(area.occupantsByID).toEqual([extraPlayer.id]);
       const lastEmittedUpdate = getLastEmittedEvent(emitter, 'interactableUpdate');
       expect(lastEmittedUpdate).toEqual({ id, stars, title, imageContents });

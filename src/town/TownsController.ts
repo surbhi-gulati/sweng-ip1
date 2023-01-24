@@ -213,12 +213,7 @@ export class TownsController extends Controller {
     if (!town?.getPlayerBySessionToken(sessionToken)) {
       throw new InvalidParametersError('Invalid values specified');
     }
-    const posterAreaSession = town
-      .getInteractable(posterSessionId)
-      .toModel() as PosterSessionAreaModel;
-    if (!posterAreaSession) {
-      throw new InvalidParametersError('Invalid values specified');
-    }
+    const posterAreaSession = town.getInteractable(posterSessionId) as PosterSessionArea;
     return posterAreaSession.imageContents;
   }
 
@@ -247,13 +242,14 @@ export class TownsController extends Controller {
       throw new InvalidParametersError('Invalid values specified');
     }
     const posterAreaSession = town.getInteractable(posterSessionId) as PosterSessionArea;
-    const posterAreaSessionModel = posterAreaSession.toModel() as PosterSessionAreaModel;
-    posterAreaSessionModel.stars += 1;
-    if (!posterAreaSession) {
-      throw new InvalidParametersError('Invalid values specified');
-    }
-    posterAreaSession.updateModel(posterAreaSessionModel);
-    return posterAreaSessionModel.stars;
+    const updatedModel = {
+      id: posterAreaSession.id,
+      stars: posterAreaSession.stars + 1,
+      title: posterAreaSession.title,
+      imageContents: posterAreaSession.imageContents,
+    };
+    posterAreaSession.updateModel(updatedModel);
+    return posterAreaSession.stars;
   }
 
   /**

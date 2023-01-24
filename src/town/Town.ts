@@ -136,7 +136,7 @@ export default class Town {
         interactable => interactable.id === message.interactableId,
       );
       if (interactableArea) {
-        socket.to(interactableArea.id).emit('chatMessage', message);
+        socket.to(interactableArea.id).except(message.sid).emit('chatMessage', message);
       }
     });
 

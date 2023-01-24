@@ -343,6 +343,67 @@ const testingMaps: TestMapDict = {
       },
     ],
   },
+  twoPosterSess: {
+    tiledversion: '1.9.0',
+    tileheight: 32,
+    tilesets: [],
+    tilewidth: 32,
+    type: 'map',
+    layers: [
+      {
+        id: 4,
+        name: 'Objects',
+        objects: [
+          {
+            type: 'PosterSessionArea',
+            height: 237,
+            id: 39,
+            name: 'Name1',
+            rotation: 0,
+            visible: true,
+            width: 326,
+            x: 40,
+            y: 120,
+          },
+          {
+            type: 'PosterSessionArea',
+            height: 266,
+            id: 43,
+            name: 'Name2',
+            rotation: 0,
+            visible: true,
+            width: 467,
+            x: 612,
+            y: 120,
+          },
+        ],
+        opacity: 1,
+        type: 'objectgroup',
+        visible: true,
+        x: 0,
+        y: 0,
+      },
+    ],
+  },
+  noInteractableObject: {
+    tiledversion: '1.9.0',
+    tileheight: 32,
+    tilesets: [],
+    tilewidth: 32,
+    type: 'map',
+    layers: [
+      {
+        id: 4,
+        name: 'Objects',
+        objects: [],
+        opacity: 1,
+        type: 'objectgroup',
+        visible: true,
+        x: 0,
+        y: 0,
+      },
+    ],
+  },
 };
 
 describe('Town', () => {
@@ -746,6 +807,21 @@ describe('Town', () => {
       expect(viewingArea2.id).toEqual('Name2');
       expect(viewingArea2.boundingBox).toEqual({ x: 612, y: 120, height: 266, width: 467 });
       expect(town.interactables.length).toBe(2);
+    });
+    it('Creates a PosterSessionArea instance for each region on the map', async () => {
+      town.initializeFromMap(testingMaps.twoPosterSess);
+      const posterSessionArea1 = town.getInteractable('Name1');
+      const posterSessionArea2 = town.getInteractable('Name2');
+      expect(posterSessionArea1.id).toEqual('Name1');
+      expect(posterSessionArea1.boundingBox).toEqual({ x: 40, y: 120, height: 237, width: 326 });
+      expect(posterSessionArea2.id).toEqual('Name2');
+      expect(posterSessionArea2.boundingBox).toEqual({ x: 612, y: 120, height: 266, width: 467 });
+      expect(town.interactables.length).toBe(2);
+    });
+    it('Creates no interactable instances on the town map when none are given to be populated', async () => {
+      town.initializeFromMap(testingMaps.noInteractableObject);
+      expect(town.interactables.length).toBe(0);
+      expect(town.interactables).toEqual([]);
     });
     describe('Updating interactable state in playerMovements', () => {
       beforeEach(async () => {

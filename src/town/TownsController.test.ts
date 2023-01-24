@@ -356,5 +356,41 @@ describe('TownsController integration tests', () => {
         ).rejects.toThrow();
       });
     });
+    // describe('getPosterAreaImageContents', () => {
+    //   it('Executes without error when retrieving undefined image contents', async () => {
+    //     //pass;
+    //   });
+    //   it('Executes without error when retrieving defined image contents', async () => {
+    //     //pass;
+    //   });
+    //   it('Returns an error message if the given sessionToken is invalid', async () => {
+    //     const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+    //     posterSessionArea.id = nanoid();
+    //     await expect(
+    //       controller.getPosterAreaImageContents(
+    //         testingTown.townID,
+    //         sessionToken,
+    //         posterSessionArea,
+    //       ),
+    //     ).rejects.toThrow();
+    //   });
+    //   it('Returns an error message if the given posterSessionId is invalid', async () => {
+    //     //pass;
+    //   });
+    // });
+    // describe('incrementPosterAreaStars', () => {
+    //   it('Executes without error when a poster area to increment from 0 stars is provided', async () => {
+    //     //pass;
+    //   });
+    //   it('Executes without error when a poster area to increment from multiple stars is provided', async () => {
+    //     //pass;
+    //   });
+    //   it('Returns an error message if the given sessionToken is invalid', async () => {
+    //     //pass;
+    //   });
+    //   it('Returns an error message if the given posterSessionId is invalid', async () => {
+    //     //pass;
+    //   });
+    // });
   });
 });
