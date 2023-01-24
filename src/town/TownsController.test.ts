@@ -2,13 +2,20 @@ import assert from 'assert';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import { Town } from '../api/Model';
-import { ConversationArea, Interactable, TownEmitter, ViewingArea } from '../types/CoveyTownSocket';
+import {
+  ConversationArea,
+  Interactable,
+  PosterSessionArea,
+  TownEmitter,
+  ViewingArea,
+} from '../types/CoveyTownSocket';
 import TownsStore from '../lib/TownsStore';
 import {
   createConversationForTesting,
   getLastEmittedEvent,
   extractSessionToken,
   mockPlayer,
+  isPosterSessionArea,
   isViewingArea,
   isConversationArea,
   MockedPlayer,
@@ -356,41 +363,66 @@ describe('TownsController integration tests', () => {
         ).rejects.toThrow();
       });
     });
-    // describe('getPosterAreaImageContents', () => {
-    //   it('Executes without error when retrieving undefined image contents', async () => {
-    //     //pass;
-    //   });
-    //   it('Executes without error when retrieving defined image contents', async () => {
-    //     //pass;
-    //   });
-    //   it('Returns an error message if the given sessionToken is invalid', async () => {
-    //     const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
-    //     posterSessionArea.id = nanoid();
-    //     await expect(
-    //       controller.getPosterAreaImageContents(
-    //         testingTown.townID,
-    //         sessionToken,
-    //         posterSessionArea,
-    //       ),
-    //     ).rejects.toThrow();
-    //   });
-    //   it('Returns an error message if the given posterSessionId is invalid', async () => {
-    //     //pass;
-    //   });
-    // });
-    // describe('incrementPosterAreaStars', () => {
-    //   it('Executes without error when a poster area to increment from 0 stars is provided', async () => {
-    //     //pass;
-    //   });
-    //   it('Executes without error when a poster area to increment from multiple stars is provided', async () => {
-    //     //pass;
-    //   });
-    //   it('Returns an error message if the given sessionToken is invalid', async () => {
-    //     //pass;
-    //   });
-    //   it('Returns an error message if the given posterSessionId is invalid', async () => {
-    //     //pass;
-    //   });
-    // });
+    describe('getPosterAreaImageContents', () => {
+      it('Executes without error when retrieving undefined image contents', async () => {
+        //
+      });
+      it('Executes without error when retrieving defined image contents', async () => {
+        //
+      });
+      it('Returns an error message if the given sessionToken is invalid', async () => {
+        const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+        const invalidSessionToken = nanoid();
+        await expect(
+          controller.getPosterAreaImageContents(
+            testingTown.townID,
+            posterSessionArea.id,
+            invalidSessionToken,
+          ),
+        ).rejects.toThrow();
+      });
+      it('Returns an error message if the given posterSessionId is invalid', async () => {
+        //
+      });
+    });
+
+    describe('incrementPosterAreaStars', () => {
+      it('Executes without error when a poster area to increment from 0 stars is provided', async () => {
+        const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+        if (!posterSessionArea) {
+          fail('Expected at least one poster session area to be returned in the initial join data');
+        } else {
+          const newPosterSessionArea = {
+            id: posterSessionArea.id,
+            stars: 0,
+            title: 'Test title',
+            imageContents: undefined,
+          };
+          const imageContents = await controller.getPosterAreaImageContents(
+            testingTown.townID,
+            newPosterSessionArea.id,
+            sessionToken,
+          );
+          expect(imageContents).toBeUndefined();
+        }
+      });
+      // it('Executes without error when a poster area to increment from multiple stars is provided', async () => {
+      //   //
+      // });
+      it('Returns an error message if the given sessionToken is invalid', async () => {
+        const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+        const invalidSessionToken = nanoid();
+        await expect(
+          controller.incrementPosterAreaStars(
+            testingTown.townID,
+            posterSessionArea.id,
+            invalidSessionToken,
+          ),
+        ).rejects.toThrow();
+      });
+      it('Returns an error message if the given posterSessionId is invalid', async () => {
+        //
+      });
+    });
   });
 });

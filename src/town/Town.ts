@@ -4,6 +4,7 @@ import { BroadcastOperator } from 'socket.io';
 import IVideoClient from '../lib/IVideoClient';
 import Player from '../lib/Player';
 import TwilioVideo from '../lib/TwilioVideo';
+import { isPosterSessionArea, isViewingArea } from '../TestUtils';
 import {
   ChatMessage,
   ConversationArea as ConversationAreaModel,
@@ -132,11 +133,11 @@ export default class Town {
     // Set up a listener to forward all chat messages to all clients in the same interactableArea as the player,
     // and only if the message has the same interactable id as the player
     socket.on('chatMessage', (message: ChatMessage) => {
-      const interactableArea = this._interactables.find(
-        interactable => interactable.id === message.interactableId,
+      const playersToSendTo = this._players.find(
+        player => message.interactableId === player?.location.interactableID,
       );
-      if (interactableArea) {
-        socket.to(interactableArea.id).except(message.sid).emit('chatMessage', message);
+      if (playersToSendTo) {
+        this._connectedSockets.forEach(sock => sock.emit('chatMessage', message));
       }
     });
 
@@ -154,22 +155,14 @@ export default class Town {
     // updateModel call to the viewingArea or posterSessionArea that corresponds to the interactable being
     // updated. Does not throw an error if the specified viewing area or poster session area does not exist.
     socket.on('interactableUpdate', (update: Interactable) => {
-      if (update instanceof PosterSessionArea) {
-        const posterSessionArea = this._interactables.find(
-          interactable => interactable.id === update.id,
-        ) as PosterSessionArea;
-        if (posterSessionArea) {
-          newPlayer.townEmitter.emit('interactableUpdate', update);
-          posterSessionArea.updateModel(update as PosterSessionAreaModel);
-        }
-      } else if (update instanceof ViewingArea) {
-        const viewingArea = this._interactables.find(
-          interactable => interactable.id === update.id,
-        ) as ViewingArea;
-        if (viewingArea) {
-          newPlayer.townEmitter.emit('interactableUpdate', update);
-          viewingArea.updateModel(update as ViewingAreaModel);
-        }
+      if (isPosterSessionArea(update)) {
+        const posterSessionArea = this.getInteractable(update.id) as PosterSessionArea;
+        newPlayer.townEmitter.emit('interactableUpdate', update);
+        posterSessionArea.updateModel(update as PosterSessionAreaModel);
+      } else if (isViewingArea(update)) {
+        const viewingArea = this.getInteractable(update.id) as ViewingArea;
+        newPlayer.townEmitter.emit('interactableUpdate', update);
+        viewingArea.updateModel(update as ViewingAreaModel);
       }
     });
     return newPlayer;
