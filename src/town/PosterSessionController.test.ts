@@ -212,12 +212,12 @@ describe('TownsController integration tests', () => {
             sessionToken,
             newPosterSessionArea,
           );
-          const numStars = await controller.incrementPosterAreaStars(
+          const stars = await controller.incrementPosterAreaStars(
             testingTown.townID,
             posterSessionArea.id,
             sessionToken,
           );
-          expect(numStars).toEqual(newPosterSessionArea.stars + 1);
+          expect(stars).toEqual(newPosterSessionArea.stars + 1);
         }
       });
       it('Gets the image contents of a poster session area', async () => {
@@ -243,6 +243,100 @@ describe('TownsController integration tests', () => {
           );
           expect(imageContents).toEqual(newPosterSessionArea.imageContents);
         }
+      });
+      describe('getPosterAreaImageContents', () => {
+        it('Executes without error when retrieving undefined image contents', async () => {
+          const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+          if (!posterSessionArea) {
+            fail(
+              'Expected at least one poster session area to be returned in the initial join data',
+            );
+          } else {
+            const newPosterSessionArea = {
+              id: posterSessionArea.id,
+              stars: 0,
+              title: 'Test title',
+              imageContents: undefined,
+            };
+            const imageContents = await controller.getPosterAreaImageContents(
+              testingTown.townID,
+              newPosterSessionArea.id,
+              sessionToken,
+            );
+            expect(imageContents).toBeUndefined();
+          }
+        });
+        it('Executes without error when retrieving defined image contents', async () => {
+          const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+          if (!posterSessionArea) {
+            fail(
+              'Expected at least one poster session area to be returned in the initial join data',
+            );
+          } else {
+            const newPosterSessionArea = {
+              id: posterSessionArea.id,
+              stars: 0,
+              title: 'Test title',
+              imageContents: readFileSync('testData/poster.jpg', 'utf-8'),
+            };
+            const imageContents = await controller.getPosterAreaImageContents(
+              testingTown.townID,
+              newPosterSessionArea.id,
+              sessionToken,
+            );
+            expect(imageContents).toEqual(newPosterSessionArea.imageContents);
+          }
+        });
+        it('Returns an error message if the given sessionToken is invalid', async () => {
+          const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+          const invalidSessionToken = nanoid();
+          await expect(
+            controller.incrementPosterAreaStars(
+              testingTown.townID,
+              posterSessionArea.id,
+              invalidSessionToken,
+            ),
+          ).rejects.toThrow();
+        });
+        it('Returns an error message if the given posterSessionId is invalid', async () => {
+          const invalidPosterSessionArea = nanoid();
+          await expect(
+            controller.getPosterAreaImageContents(
+              testingTown.townID,
+              invalidPosterSessionArea,
+              sessionToken,
+            ),
+          ).rejects.toThrow();
+        });
+      });
+      describe('incrementPosterAreaStars', () => {
+        it('Executes without error when a poster area to increment from 0 stars is provided', async () => {
+          //
+        });
+        it('Executes without error when a poster area to increment from multiple stars is provided', async () => {
+          //
+        });
+        it('Returns an error message if the given sessionToken is invalid', async () => {
+          const posterSessionArea = interactables.find(isPosterSessionArea) as PosterSessionArea;
+          const invalidSessionToken = nanoid();
+          await expect(
+            controller.incrementPosterAreaStars(
+              testingTown.townID,
+              posterSessionArea.id,
+              invalidSessionToken,
+            ),
+          ).rejects.toThrow();
+        });
+        it('Returns an error message if the given posterSessionId is invalid', async () => {
+          const invalidPosterSessionArea = nanoid();
+          await expect(
+            controller.incrementPosterAreaStars(
+              testingTown.townID,
+              invalidPosterSessionArea,
+              sessionToken,
+            ),
+          ).rejects.toThrow();
+        });
       });
     });
   });
